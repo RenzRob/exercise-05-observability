@@ -1,5 +1,6 @@
 from datetime import datetime, timezone
 from fastapi import Depends, FastAPI, HTTPException, Response
+from prometheus_client import Counter, Histogram, generate_latest, CONTENT_TYPE_LATEST
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 from src.database import Base, engine, get_db
@@ -8,6 +9,21 @@ from src.schemas import NodeCreate, NodeResponse, NodeUpdate
 
 Base.metadata.create_all(bind=engine)
 app = FastAPI()
+
+http_requests_total = Counter(
+    "http_requests_total",
+    "Total HTTP requests",
+    ["method", "endpoint", "status"],
+)
+http_request_duration_seconds = Histogram(
+    "http_request_duration_seconds",
+    "HTTP request duration in seconds",
+    ["method", "endpoint"],
+)
+
+@app.get("/metrics")
+def metrics():
+    return Response(generate_latest(), media_type=CONTENT_TYPE_LATEST)
 
 @app.get("/health")
 def health(db: Session = Depends(get_db)):
