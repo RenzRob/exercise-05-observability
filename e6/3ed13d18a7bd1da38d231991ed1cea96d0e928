@@ -1,0 +1,14 @@
+README.md
+  h_c044bf8701ab58 7
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.4.8",
+  "base_commit_sha": "e63ed13d18a7bd1da38d231991ed1cea96d0e928",
+  "prompts": {},
+  "humans": {
+    "h_c044bf8701ab58": {
+      "author": "rrobles_meli <renzo.robles@mercadolibre.com>"
+    }
+  }
+}
