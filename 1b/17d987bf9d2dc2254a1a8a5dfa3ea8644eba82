@@ -1,0 +1,21 @@
+grafana/provisioning/dashboards/nodes-api.json
+  s_fb4525197ee0d3::t_f065fedc9690d9 2-17,19,21-22,24,29-65,68,70-73,76-78,82,88-92,95,97-133,136-138,142,146-148,155,164,167-170
+src/app.py
+  s_fb4525197ee0d3::t_bc54f4ff46272d 1,3-4,14-17,19-23,25-47,53,62,65,75-76,79,84,92,107,116-117
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.4.8",
+  "base_commit_sha": "1b17d987bf9d2dc2254a1a8a5dfa3ea8644eba82",
+  "prompts": {},
+  "sessions": {
+    "s_fb4525197ee0d3": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ff1dfe95-ffb1-47c3-91f9-e50b5f5810d4",
+        "model": "claude-sonnet-4-6"
+      },
+      "human_author": "rrobles_meli <renzo.robles@mercadolibre.com>"
+    }
+  }
+}
