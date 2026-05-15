@@ -4,7 +4,7 @@
 >
 > This exercise is part of the continuous assessment for the course. Throughout the semester you will solve hands-on exercises that are graded automatically. Each exercise builds on the previous one and reinforces concepts you will need for the major assignments: REST APIs, Docker, Compose, Kubernetes, messaging, etc.
 >
-> The goal is not just to "pass the tests" but to understand what you are building. Tests validate the output — comprehension is on you.
+> The goal is not just to "pass the tests" but to understand what you are building. Tests validate the output — comprehension is on you
 
 ## Course topics covered
 
