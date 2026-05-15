@@ -1,6 +1,7 @@
+import time
 from datetime import datetime, timezone
-from fastapi import Depends, FastAPI, HTTPException, Response
-from prometheus_client import Counter, Histogram, generate_latest, CONTENT_TYPE_LATEST
+from fastapi import Depends, FastAPI, HTTPException, Request, Response
+from prometheus_client import Counter, Gauge, Histogram, generate_latest, CONTENT_TYPE_LATEST
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 from src.database import Base, engine, get_db
@@ -10,20 +11,45 @@ from src.schemas import NodeCreate, NodeResponse, NodeUpdate
 Base.metadata.create_all(bind=engine)
 app = FastAPI()
 
-http_requests_total = Counter(
-    "http_requests_total",
-    "Total HTTP requests",
-    ["method", "endpoint", "status"],
+registry_requests_total = Counter(
+    "noderegistry_requests_total",
+    "Total requests received by the node registry API",
+    ["method", "path", "status_code"],
 )
-http_request_duration_seconds = Histogram(
-    "http_request_duration_seconds",
-    "HTTP request duration in seconds",
-    ["method", "endpoint"],
+registry_request_duration_seconds = Histogram(
+    "noderegistry_request_duration_seconds",
+    "Request processing time in seconds",
+    ["method", "path"],
+    buckets=[0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1.0, 2.5],
 )
+registry_active_nodes = Gauge(
+    "noderegistry_active_nodes_total",
+    "Number of nodes currently in active state",
+)
+
+
+@app.middleware("http")
+async def track_requests(request: Request, call_next):
+    start = time.perf_counter()
+    response = await call_next(request)
+    duration = time.perf_counter() - start
+    path = request.url.path
+    registry_requests_total.labels(
+        method=request.method,
+        path=path,
+        status_code=str(response.status_code),
+    ).inc()
+    registry_request_duration_seconds.labels(
+        method=request.method,
+        path=path,
+    ).observe(duration)
+    return response
+
 
 @app.get("/metrics")
 def metrics():
     return Response(generate_latest(), media_type=CONTENT_TYPE_LATEST)
+
 
 @app.get("/health")
 def health(db: Session = Depends(get_db)):
@@ -33,7 +59,9 @@ def health(db: Session = Depends(get_db)):
     except Exception:
         db_status = "disconnected"
     count = db.query(Node).filter(Node.status == "active").count()
+    registry_active_nodes.set(count)
     return {"status": "ok", "db": db_status, "nodes_count": count}
+
 
 @app.post("/api/nodes", response_model=NodeResponse, status_code=201)
 def register_node(node: NodeCreate, db: Session = Depends(get_db)):
@@ -44,11 +72,15 @@ def register_node(node: NodeCreate, db: Session = Depends(get_db)):
     db.add(db_node)
     db.commit()
     db.refresh(db_node)
+    active = db.query(Node).filter(Node.status == "active").count()
+    registry_active_nodes.set(active)
     return db_node
+
 
 @app.get("/api/nodes", response_model=list[NodeResponse])
 def list_nodes(db: Session = Depends(get_db)):
     return db.query(Node).all()
+
 
 @app.get("/api/nodes/{name}", response_model=NodeResponse)
 def get_node(name: str, db: Session = Depends(get_db)):
@@ -56,6 +88,7 @@ def get_node(name: str, db: Session = Depends(get_db)):
     if not node:
         raise HTTPException(status_code=404, detail="Node not found")
     return node
+
 
 @app.put("/api/nodes/{name}", response_model=NodeResponse)
 def update_node(name: str, update: NodeUpdate, db: Session = Depends(get_db)):
@@ -71,6 +104,7 @@ def update_node(name: str, update: NodeUpdate, db: Session = Depends(get_db)):
     db.refresh(node)
     return node
 
+
 @app.delete("/api/nodes/{name}", status_code=204)
 def delete_node(name: str, db: Session = Depends(get_db)):
     node = db.query(Node).filter(Node.name == name).first()
@@ -79,4 +113,6 @@ def delete_node(name: str, db: Session = Depends(get_db)):
     node.status = "inactive"
     node.updated_at = datetime.now(timezone.utc)
     db.commit()
+    active = db.query(Node).filter(Node.status == "active").count()
+    registry_active_nodes.set(active)
     return Response(status_code=204)
