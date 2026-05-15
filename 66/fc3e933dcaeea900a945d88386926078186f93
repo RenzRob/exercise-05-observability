@@ -1,0 +1,21 @@
+grafana/provisioning/dashboards/dashboards.yml
+  s_fb4525197ee0d3::t_9d2c73bd8b35f8 1-10
+grafana/provisioning/dashboards/nodes-api.json
+  s_fb4525197ee0d3::t_56d3e5485bc9ea 1-73
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.4.8",
+  "base_commit_sha": "66fc3e933dcaeea900a945d88386926078186f93",
+  "prompts": {},
+  "sessions": {
+    "s_fb4525197ee0d3": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ff1dfe95-ffb1-47c3-91f9-e50b5f5810d4",
+        "model": "claude-sonnet-4-6"
+      },
+      "human_author": "rrobles_meli <renzo.robles@mercadolibre.com>"
+    }
+  }
+}
